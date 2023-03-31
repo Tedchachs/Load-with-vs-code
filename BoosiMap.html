@@ -64,87 +64,133 @@
 
 
       <script type='text/javascript'>
+
         var map;
         var markers = [];
+        var locationIndex = 0;
+        var dataSetIndex = 0;
+        var dataset = [
+          {
+            location: {
+              latitude: -1.546265,
+              longitude: 37.254002
+            },
+            networks: [
+              {
+                network: "(KATOLONI) Safaricom",
+                speed: [81.9, 70.1, 64.3]
+              },
+              {
+                network: "(KATOLONI) Telkom",
+                speed: [70.1, 81.9, 64.3]
+              },
+              {
+                network: "(KATOLONI) Airtel",
+                speed: [64.3, 81.9, 70.1]
+              }
+            ]
+          },
+          {
+            location: {
+              latitude: -1.528080,
+              longitude: 37.272874
+            },
+            networks: [
+              {
+                network: "(KATHEMBONI) Safaricom",
+                speed: [70.1, 70.1, 81.9]
+              },
+              {
+                network: "(KATHEMBONI) Telkom",
+                speed: [81.9, 64.3, 70.1]
+              },
+              {
+                network: "(KATHEMBONI) Airtel",
+                speed: [70.1, 81.9, 64.3]
+              }
+            ]
+          },
+          {
+            location: {
+              latitude: -1.518430,
+              longitude: 37.266900
+            },
+            networks: [
+              {
+                network: "(MIWANI) Safaricom",
+                speed: [64.3, 81.9, 64.3]
+              },
+              {
+                network: "(MIWANI) Telkom",
+                speed: [81.9, 70.1, 70.1]
+              },
+              {
+                network: "(MIWANI) Airtel",
+                speed: [70.1, 64.3, 81.9]
+              }
+            ]
+          }
+        ];
 
-        function GetMap()
-         
-        {
+        function GetMap() {
           map = new Microsoft.Maps.Map('#myMap', {
-                credentials: 'AklTfTVriL4qXLKjsw2cH47CIx9ndpFYLg2ZB1iI4zN9tndzCjYiCJdCMIRFbWZr',
-            });
+            credentials: 'AklTfTVriL4qXLKjsw2cH47CIx9ndpFYLg2ZB1iI4zN9tndzCjYiCJdCMIRFbWZr',
+          });
 
-            var center = new Microsoft.Maps.Location(-1.546265, 37.254002);
-            var pushpin = new Microsoft.Maps.Pushpin(center);
-            map.entities.push(pushpin);
-
-          var dataset = [
-            {location: {latitude: -1.546265, longitude: 37.254002}, network: "(KATOLONI)   Safaricom: 4G Telkom: 3G Airtel: 2G"},
-            {location: {latitude: -1.528080, longitude: 37.272874}, network: "(KATHEMBONI)   Safaricom: 3G Telkom: 3G Airtel: 4G"},
-            {location: {latitude: -1.518430, longitude: 37.266900}, network: "(MIWANI)   Safaricom: 2G Telkom: 4G Airtel: 2G"},
-          ];
+          // set the center location of the map and the zoom level
+          var center = new Microsoft.Maps.Location(-1.520570, 37.262260);
+          map.setView({
+            center: center,
+            zoom: 12
+          });
 
           setInterval(function() {
-            // Select a random data point from the mock dataset
-            var data = dataset[Math.floor(Math.random() * dataset.length)];
-            var coordinates = new Microsoft.Maps.Location(data.location.latitude, data.location.longitude);
-            var network = data.network;
-            var speed = data.speed;
+            // Get the current location data
+            var currentLocation = dataset[locationIndex];
+            // Get the current network data for the location
+            var currentNetwork = currentLocation.networks[dataSetIndex];
+            // Get the current speed for the network
+            var currentSpeed = currentNetwork.speed.shift();
+            // Add the speed back to the end of the array
+            currentNetwork.speed.push(currentSpeed);
+            // Update the network text with the current speed
+            var network = currentNetwork.network + ': ' + currentSpeed.toFixed(1) + 'dB';
+            // Get the coordinates of the location
+            var coordinates = new Microsoft.Maps.Location(currentLocation.location.latitude, currentLocation.location.longitude);
 
             // Remove old markers from the map
             markers.forEach(function(marker) {
               map.entities.remove(marker);
             });
-            markers = [];
 
-            // Add a new marker with color and icon depending on network speed
-        
-            var markerColor = "orange";
-            var markerIcon = "https://www.bingmapsportal.com/Content/images/poi_custom.png";
-            var label = network;
-
-            if (speed == "4G") {
-              markerColor = "orange";
-              markerIcon = "https://www.bingmapsportal.com/Content/images/poi_custom.png";
-            } else if (speed == "3G") {
-              markerColor = "orange";
-              markerIcon = "https://www.bingmapsportal.com/Content/images/poi_custom.png";
-            }
-
-            var marker = new Microsoft.Maps.Pushpin(coordinates,
-             
+            // Add a marker for the current location  
+            var marker = new Microsoft.Maps.Pushpin(coordinates, 
             {
+
               title: network,
-              color: markerColor,
-              icon: markerIcon,
-              text: '',
-              textOffset: new Microsoft.Maps.Point(0, 12),
-              label: {
-                  text: network,
-                  color: 'black',
-                  fontSize: '14px',
-                  fontFamily: 'Segoe UI, Arial',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  display: 'block',
-                  textAlign: 'center',
-                  minWidth: '80px',
-                  padding: '5px 10px',
-                  backgroundColor: 'white',
-                  border: '1px solid #ccc',
-                  borderRadius: '5px',
-                  boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)'
-              }
+              color: 'orange',
+              icon: 'https://www.bingmapsportal.com/Content/images/poi_custom.png'
+
 
             });
 
-            map.entities.push(marker);
             markers.push(marker);
+            map.entities.push(marker);
 
-          }, 3000);
+            // Update the dataset index
+            dataSetIndex++;
+            if (dataSetIndex >= currentLocation.networks.length) {
+              dataSetIndex = 0;
+              locationIndex++;
+              if (locationIndex >= dataset.length) {
+                locationIndex = 0;
+              }
+            }
+          }, 1500);
         }
 
       </script>
+
 
 
       <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=AklTfTVriL4qXLKjsw2cH47CIx9ndpFYLg2ZB1iI4zN9tndzCjYiCJdCMIRFbWZr'></script>
